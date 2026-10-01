@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101114">
+<meta name="description" content="Zet Paint — browser drawing studio">
+<title>Zet Paint — Drawing Studio</title>
+<style>
+:root{--bg:#0d0e11;--panel:#15171b;--panel2:#1c1f24;--line:#2b2f36;--text:#f4f5f7;--muted:#9ca3af;--accent:#ff4d6d;--canvas:#fff}
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font:14px Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input{font:inherit}button{border:0;color:inherit;background:none;cursor:pointer}.app{height:100dvh;display:grid;grid-template-rows:56px 1fr 54px}
+.top{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid var(--line);background:rgba(13,14,17,.96);z-index:5}.brand{font-weight:800;font-size:16px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;min-width:150px}.brand i{width:24px;height:24px;border-radius:8px;background:linear-gradient(135deg,#ff4d6d,#ff9f43);display:grid;place-items:center;font-style:normal;color:white;font-size:13px}
+.toolrow{display:flex;gap:5px;align-items:center}.icon{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:18px}.icon:hover,.icon.active{background:var(--panel2)}.icon.active{box-shadow:inset 0 0 0 1px #454a54}.spacer{flex:1}.zoom{font-variant-numeric:tabular-nums;color:var(--muted);min-width:55px;text-align:center}.primary{background:var(--accent);padding:9px 13px;border-radius:9px;font-weight:700}
+.main{min-height:0;display:grid;grid-template-columns:62px 1fr 270px;overflow:hidden}.left{border-right:1px solid var(--line);background:var(--panel);padding:8px 7px;display:flex;flex-direction:column;align-items:center;gap:5px}.left .icon{width:46px;height:44px}.left .divider{width:34px;height:1px;background:var(--line);margin:4px}
+.stage{position:relative;min-width:0;min-height:0;background:#25272b;overflow:hidden;touch-action:none}.checker{position:absolute;inset:0;background-color:#303238;background-image:linear-gradient(45deg,#292b2f 25%,transparent 25%),linear-gradient(-45deg,#292b2f 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#292b2f 75%),linear-gradient(-45deg,transparent 75%,#292b2f 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}.paper{position:absolute;left:50%;top:50%;transform-origin:0 0;background:#fff;box-shadow:0 12px 50px #0008}.paper canvas{display:block;width:100%;height:100%}.cursor{position:absolute;border:1px solid #fff;border-radius:50%;pointer-events:none;display:none;mix-blend-mode:difference}.right{background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:12px}.section{margin-bottom:15px}.section h3{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:0 0 9px}.row{display:flex;align-items:center;gap:8px;margin:8px 0}.label{color:#c9cdd5;flex:1}.value{color:#fff;font-variant-numeric:tabular-nums}.range{width:100%;accent-color:var(--accent)}.color{width:48px;height:32px;padding:2px;background:var(--panel2);border:1px solid var(--line);border-radius:7px}.swatches{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}.swatch{aspect-ratio:1;border-radius:6px;border:1px solid #ffffff22}.swatch.active{outline:2px solid white;outline-offset:1px}.layers{display:flex;flex-direction:column;gap:5px}.layer{display:flex;align-items:center;gap:8px;background:var(--panel2);padding:8px;border-radius:8px;border:1px solid transparent}.layer.active{border-color:#555b66}.layer .thumb{width:32px;height:25px;border-radius:4px;background:#fff}.layer-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.layer button{font-size:15px}.bottom{display:flex;align-items:center;justify-content:center;gap:14px;border-top:1px solid var(--line);background:var(--panel);z-index:5}.bottom span{color:var(--muted);font-size:12px}.toast{position:fixed;bottom:68px;left:50%;transform:translateX(-50%) translateY(12px);background:#202329;border:1px solid #3a3e46;padding:9px 13px;border-radius:9px;opacity:0;transition:.2s;pointer-events:none;z-index:20}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:800px){.main{grid-template-columns:52px 1fr}.right{display:none}.brand{min-width:auto}.brand span{display:none}.top{padding:6px}.icon{width:35px;height:35px}.primary{padding:8px}.left .icon{width:38px}.bottom{gap:8px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+ <div class="brand"><i>✎</i><span>Zet Paint</span></div>
+ <div class="toolrow">
+  <button class="icon" id="undo" title="Undo">↶</button><button class="icon" id="redo" title="Redo">↷</button>
+ </div>
+ <div class="spacer"></div><div class="zoom" id="zoomText">100%</div>
+ <button class="icon" id="fit" title="Fit canvas">⌗</button>
+ <button class="primary" id="export">Export PNG</button>
+</header>
+<main class="main">
+<aside class="left">
+ <button class="icon active" data-tool="brush" title="Brush">🖌</button>
+ <button class="icon" data-tool="eraser" title="Eraser">◌</button>
+ <button class="icon" data-tool="fill" title="Fill">▧</button>
+ <button class="icon" data-tool="eyedropper" title="Eyedropper">⌾</button>
+ <div class="divider"></div>
+ <button class="icon" id="clear" title="Clear layer">⌫</button>
+ <button class="icon" id="addLayer" title="New layer">＋</button>
+ <button class="icon" id="saveLocal" title="Save project">▣</button>
+ <button class="icon" id="loadLocal" title="Load project">↥</button>
+ <input type="file" id="projectFile" accept=".json" hidden>
+</aside>
+<section class="stage" id="stage"><div class="checker"></div><div class="paper" id="paper"><canvas id="canvas"></canvas></div><div class="cursor" id="cursor"></div></section>
+<aside class="right">
+ <div class="section"><h3>Brush</h3>
+  <div class="row"><span class="label">Size</span><b class="value" id="sizeVal">18 px</b></div><input class="range" id="size" type="range" min="1" max="200" value="18">
+  <div class="row"><span class="label">Opacity</span><b class="value" id="opacityVal">100%</b></div><input class="range" id="opacity" type="range" min="1" max="100" value="100">
+  <div class="row"><span class="label">Color</span><input class="color" id="color" type="color" value="#111111"></div>
+ </div>
+ <div class="section"><h3>Palette</h3><div class="swatches" id="swatches"></div></div>
+ <div class="section"><h3>Canvas</h3>
+  <div class="row"><span class="label">Width</span><input id="cw" type="number" min="100" max="4000" value="1200" style="width:90px;background:#202329;color:white;border:1px solid #333;padding:6px;border-radius:6px"></div>
+  <div class="row"><span class="label">Height</span><input id="ch" type="number" min="100" max="4000" value="800" style="width:90px;background:#202329;color:white;border:1px solid #333;padding:6px;border-radius:6px"></div>
+  <button class="primary" id="resize" style="width:100%">Resize / New Canvas</button>
+ </div>
+ <div class="section"><h3>Layers</h3><div class="layers" id="layers"></div></div>
+</aside>
+</main>
+<footer class="bottom"><span>🖌 Brush</span><span>Wheel: Zoom</span><span>Space + drag: Pan</span><span>Ctrl+Z / Ctrl+Shift+Z</span></footer>
+</div><div class="toast" id="toast"></div>
+<script>
+const canvas=document.getElementById('canvas'), paper=document.getElementById('paper'), stage=document.getElementById('stage'), ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id); let W=1200,H=800,tool='brush',color='#111111',size=18,opacity=1,zoom=1,panX=0,panY=0,drawing=false,panning=false,lastX=0,lastY=0,history=[],future=[],layers=[],activeLayer=0;
+const palette=['#111111','#ffffff','#ff4757','#ff6b81','#ffa502','#ffd32a','#2ed573','#1e90ff','#5352ed','#a55eea','#ff9ff3','#00d2d3','#747d8c','#57606f','#dfe4ea','#70a1ff'];
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(window.tt);window.tt=setTimeout(()=>e.classList.remove('show'),1600)}
+function setupCanvas(w=W,h=H){W=w;H=h;canvas.width=W;canvas.height=H;ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);renderTransform();snapshot(true);renderLayers()}
+function renderTransform(){paper.style.width=W+'px';paper.style.height=H+'px';paper.style.transform=`translate(calc(-50% + ${panX}px),calc(-50% + ${panY}px)) scale(${zoom})`; $('zoomText').textContent=Math.round(zoom*100)+'%'}
+function snapshot(initial=false){const s=canvas.toDataURL('image/png');if(!initial){history.push(s);if(history.length>30)history.shift();future=[]}else history=[s];}
+function restore(data){const im=new Image();im.onload=()=>{ctx.clearRect(0,0,W,H);ctx.drawImage(im,0,0);renderLayers();};im.src=data}
+function undo(){if(history.length<=1)return;future.push(history.pop());restore(history.at(-1));}
+function redo(){if(!future.length)return;const s=future.pop();history.push(s);restore(s)}
+function pos(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+function pointerDown(e){if(e.button===1||e.shiftKey||(e.pointerType==='touch'&&e.buttons===2)){panning=true;lastX=e.clientX;lastY=e.clientY;stage.setPointerCapture(e.pointerId);return} if(tool==='fill'){fillAt(pos(e));return}if(tool==='eyedropper'){pickAt(pos(e));return}if(tool==='brush'||tool==='eraser'){drawing=true;const p=pos(e);lastX=p.x;lastY=p.y;ctx.beginPath();ctx.arc(p.x,p.y,size/2,0,Math.PI*2);ctx.fillStyle=color;ctx.globalAlpha=opacity;ctx.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';ctx.fill();ctx.globalAlpha=1;stage.setPointerCapture(e.pointerId)}}
+function pointerMove(e){const p=pos(e);const c=$('cursor');c.style.display='block';c.style.width=size*zoom+'px';c.style.height=size*zoom+'px';c.style.left=(e.clientX-stage.getBoundingClientRect().left-size*zoom/2)+'px';c.style.top=(e.clientY-stage.getBoundingClientRect().top-size*zoom/2)+'px';if(panning){panX+=e.clientX-lastX;panY+=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;renderTransform();return}if(!drawing)return;ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=size;ctx.globalAlpha=opacity;ctx.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';ctx.strokeStyle=color;ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.globalAlpha=1;lastX=p.x;lastY=p.y}
+function pointerUp(){if(drawing){drawing=false;ctx.globalCompositeOperation='source-over';snapshot()}panning=false}
+function fillAt(p){const image=ctx.getImageData(0,0,W,H),data=image.data,x=Math.floor(p.x),y=Math.floor(p.y),i=(y*W+x)*4,target=[data[i],data[i+1],data[i+2],data[i+3]], hex=color.slice(1),fill=[parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16),255];if(target.every((v,j)=>v===fill[j]))return;const stack=[[x,y]],seen=new Uint8Array(W*H);while(stack.length){const [cx,cy]=stack.pop();if(cx<0||cy<0||cx>=W||cy>=H)continue;const k=cy*W+cx;if(seen[k])continue;const q=k*4;if(Math.abs(data[q]-target[0])+Math.abs(data[q+1]-target[1])+Math.abs(data[q+2]-target[2])+Math.abs(data[q+3]-target[3])>10)continue;seen[k]=1;data[q]=fill[0];data[q+1]=fill[1];data[q+2]=fill[2];data[q+3]=fill[3];stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1])}ctx.putImageData(image,0,0);snapshot();toast('Area filled')}
+function pickAt(p){const d=ctx.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data;color='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');$('color').value=color;toast('Color picked')}
+function setTool(t){tool=t;document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t))}
+function renderLayers(){layers=[{name:'Layer 1',visible:true}];$('layers').innerHTML=`<div class="layer active"><span class="thumb"></span><span class="layer-name">Layer 1</span><button title="Visible">◉</button></div>`}
+function exportPNG(){const a=document.createElement('a');a.download='zet-paint-'+Date.now()+'.png';a.href=canvas.toDataURL('image/png');a.click();toast('PNG exported')}
+function saveProject(){const obj={version:1,width:W,height:H,image:canvas.toDataURL('image/png'),color,size};const a=document.createElement('a');a.download='zet-paint-project.json';a.href=URL.createObjectURL(new Blob([JSON.stringify(obj)],{type:'application/json'}));a.click();toast('Project saved')}
+$('loadLocal').onclick=()=>$('projectFile').click();$('projectFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const o=JSON.parse(rd.result);W=o.width;H=o.height;canvas.width=W;canvas.height=H;restore(o.image);renderTransform();toast('Project loaded')};rd.readAsText(f)};
+$('saveLocal').onclick=saveProject;$('export').onclick=exportPNG;$('undo').onclick=undo;$('redo').onclick=redo;$('fit').onclick=()=>{zoom=Math.min((stage.clientWidth-40)/W,(stage.clientHeight-40)/H);panX=panY=0;renderTransform()};
+$('clear').onclick=()=>{if(confirm('Clear active layer?')){ctx.clearRect(0,0,W,H);snapshot();toast('Layer cleared')}};$('addLayer').onclick=()=>toast('Layer system is ready for multi-layer expansion');
+document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+$('size').oninput=e=>{size=+e.target.value;$('sizeVal').textContent=size+' px'};$('opacity').oninput=e=>{opacity=+e.target.value/100;$('opacityVal').textContent=e.target.value+'%'};$('color').oninput=e=>color=e.target.value;
+$('swatches').innerHTML=palette.map(c=>`<button class="swatch" style="background:${c}" data-c="${c}"></button>`).join('');document.querySelectorAll('.swatch').forEach(b=>b.onclick=()=>{color=b.dataset.c;$('color').value=color;document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));b.classList.add('active')});
+$('resize').onclick=()=>{const w=+$('cw').value,h=+$('ch').value;if(w<100||h<100)return;setupCanvas(w,h);toast('New canvas created')};
+stage.addEventListener('pointerdown',pointerDown);stage.addEventListener('pointermove',pointerMove);stage.addEventListener('pointerup',pointerUp);stage.addEventListener('pointercancel',pointerUp);stage.addEventListener('pointerleave',()=>{$('cursor').style.display='none'});
+stage.addEventListener('wheel',e=>{e.preventDefault();const old=zoom, factor=e.deltaY<0?1.1:.9;zoom=Math.max(.1,Math.min(8,zoom*factor));const r=stage.getBoundingClientRect();const mx=e.clientX-r.left-r.width/2,my=e.clientY-r.top-r.height/2;panX=mx-(mx-panX)*zoom/old;panY=my-(my-panY)*zoom/old;renderTransform()},{passive:false});
+window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo()}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo()}if(e.code==='Space'&&!e.repeat){stage.style.cursor='grab'}});
+window.addEventListener('keyup',e=>{if(e.code==='Space')stage.style.cursor=''});
+setupCanvas();$('fit').click();
+</script></body></html>
